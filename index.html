@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inventory</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+        integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="header">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#">Daftar Barang</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="profile.html">Tentang Toko</a>
+                        </li>
+
+                    </ul>
+                </div>
+                <div class="input-group  pt-4">
+                    <input type="text" id="myInput" onkeyup='tableSearch()' class="form-control"
+                        placeholder="Cari Nama Barang" aria-label="Recipient's username"
+                        aria-describedby="basic-addon2">
+                </div>
+
+        </nav>
+    </div>
+
+
+    <div class="container" id="content">
+        <div class="container" , height="20" , overflow="auto">
+            <div class="table-responsive col-lg-12">
+                <table class="table" id="myTable" data-filter-control="true" data-show-search-clear-button="true"
+                    cellspacing="0" width="100%">
+                    <thead>
+                        <th scope="col">No</th>
+                        <th scope="col">Nama Barang</th>
+                        <th scope="col">Harga Jual</th>
+                        <th scope="col">Stok</th>
+                    </thead>
+                    <tbody id="tbody1"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+   
+
+    <!--Firestore Libraries-->
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-firestore.js"></script>
+
+    <script id="MainScript">
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh1SNiYQOXI5DfFD4ZVpNU4XZvwVlN0Ow",
+            authDomain: "inventory-fdf17.firebaseapp.com",
+            databaseURL: "https://inventory-fdf17-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "inventory-fdf17",
+            storageBucket: "inventory-fdf17.appspot.com",
+            messagingSenderId: "772162508720",
+            appId: "1:772162508720:web:5ae0f473613fb6a455e875",
+            measurementId: "G-QNL37FFERR"
+        };
+        firebase.initializeApp(firebaseConfig);
+        let db = firebase.firestore();
+
+        //Get All data
+        function GetAllDataOnce() {
+            db.collection("Data").doc('4Fx9chTPaPZcYvnsXVjSxyOpVkB3').collection('product').get().then((querySnapshot) => {
+                var prod = [];
+                querySnapshot.forEach(doc => {
+                    prod.push(doc.data());
+                });
+                // console.log(querySnapshot);
+                // console.log(prod);
+                AddAllItemsToTheTable(prod);
+            });
+        }
+
+        function GetAllDataRealtime() {
+            db.collection("Data").doc('4Fx9chTPaPZcYvnsXVjSxyOpVkB3').collection('product').onSnapshot((querySnapshot) => {
+                var prod = [];
+                querySnapshot.forEach(doc => {
+                    prod.push(doc.data());
+                });
+                AddAllItemsToTheTable(prod);
+            });
+        }
+        //Filling tabel
+        var stdNo = 0;
+        var tbody = document.getElementById('tbody1');
+
+        function AddItemToTable(nama, harga, stok) {
+            var trow = document.createElement('tr');
+            var td1 = document.createElement('td');
+            var td2 = document.createElement('td');
+            var td3 = document.createElement('td');
+            var td4 = document.createElement('td');
+
+            td1.innerHTML = ++stdNo;
+            td2.innerHTML = nama;
+            td3.innerHTML = harga;
+            td4.innerHTML = stok;
+
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+
+            tbody.appendChild(trow);
+        }
+
+        function AddAllItemsToTheTable(ProdDocsList) {
+            stdNo = 0;
+            tbody.innerHTML = "";
+            ProdDocsList.forEach(element => {
+                AddItemToTable(element.nama_produk, element.harga_produk, element.stok_produk);
+            });
+        }
+
+
+        window.onload = GetAllDataRealtime;
+    </script>
+    <script type="application/javascript">
+        function tableSearch() {
+            let input, filter, table, tr, td, txtValue;
+            console.log('working')
+            //Intialising Variables
+            input = document.getElementById("myInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (let i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[1];
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+
+        }
+    </script>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+    <!-- Bootstrap DataTables CSS -->
+    <!-- Jquery -->
+    <script type="text/javascript" language="javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <!-- Jquery DataTables -->
+    <script type="text/javascript" language="javascript"
+        src="http:////cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
+    <!-- Bootstrap dataTables Javascript -->
+    <script type="text/javascript" language="javascript"
+        src="http://cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>
+    <!-- Panggil Fungsi -->
+
+</body>
+
+<footer class="bg-dark text-center text-white">
+    <!-- Grid container -->
+    <div class="container p-1 pb-0">
+        <!-- Section: Social media -->
+        <section>
+
+
+            <!-- Twitter -->
+            <a class="btn btn-outline-light btn-floating m-1" href="https://twitter.com/xeizor0106" role="button"><i
+                    class="fab fa-twitter"></i></a>
+
+
+
+            <!-- Instagram -->
+            <a class="btn btn-outline-light btn-floating m-1" href="https://www.instagram.com/mgalihpratama0?r=nametag"
+                role="button"><i class="fab fa-instagram"></i></a>
+
+            <!-- Linkedin -->
+            <a class="btn btn-outline-light btn-floating m-1" href="https://www.linkedin.com/in/m-galih-pratama/"
+                role="button"><i class="fab fa-linkedin-in"></i></a>
+
+                  
+        </section>
+        <!-- Section: Social media -->
+    </div>
+    <!-- Grid container -->
+
+    <!-- Copyright -->
+    <div class="text-center p-2" style="background-color: rgba(0, 0, 0, 0.2);">
+        © 2022 Copyright:
+        <a class="text-white">M. Galih Pratama</a>
+    </div>
+    <!-- Copyright -->
+</footer>
+
+</html>
